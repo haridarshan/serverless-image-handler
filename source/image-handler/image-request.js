@@ -26,7 +26,17 @@ class ImageRequest {
             this.bucket = this.parseImageBucket(event, this.requestType);
             this.key = this.parseImageKey(event, this.requestType);
             this.edits = this.parseImageEdits(event, this.requestType);
-            this.originalImage = await this.getOriginalImage(this.bucket, this.key);
+            
+            let buckets = this.getAllowedSourceBuckets();
+            for (let i = 0; i < buckets.length(); i++) {
+                try {
+                    this.originalImage = await this.getOriginalImage(buckets[i], this.key);
+                } catch (err) {
+                    if (i >= buckets.length() - 1) {
+                        return Promise.reject(err);
+                    }
+                }
+            }
 
             /* Decide the output format of the image.
              * 1) If the format is provided, the output format is the provided format.
